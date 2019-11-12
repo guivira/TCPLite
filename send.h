@@ -5,6 +5,8 @@
 #include <signal.h>
 #include <cstdlib>
 #include <unistd.h> //para poder usar sleep
+#define FRAME_LEN 512
+#define WINDOW_LEN 10
 static Data * shm_data;
 
 void sing_handler(int sing){
@@ -40,7 +42,7 @@ void blind_signal(){
 
 */
 int send(char * name_file, char * ip, int puerto){
-    shm_data = new Data(name_file,ip,puerto);
+    shm_data = new Data(name_file, ip, puerto, FRAME_LEN, WINDOW_LEN);
 
     delete shm_data;
     return 1;

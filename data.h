@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <semaphore.h>
 #include <cstdlib>
+#include "window.h"
 
 class Data{
 private:
@@ -13,8 +14,10 @@ private:
     bool int_fill = false;
     sem_t hl_semaphore;
     sem_t int_semaphore;
+    Window * wndw;
 public:
-    Data(char * name_file, char * ip, int puerto);
+    Data(char * name_file, char * ip, int puerto, int frame_len, int w_len);
+    ~Data();
 };
 
 #endif // DATA_H
