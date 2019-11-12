@@ -1,348 +1,124 @@
-#ifndef COLA_H
-#define COLA_H
+#ifndef WINDOW_H
+#define WINDOW_H
 #include <iostream>
-
+#include <stdio.h>
 using namespace std;
-typedef char* type_ptr;
-typedef char type;
 
 class Window{
-    private:
-        int size; // tamano del vector
-        int w_len;
-        type_ptr * vector;
-        int nMin; // el paquete más pequeño guardado
-        int item_accounter; // cantidad de elementos guardados
-        int last_filled; // el paquete más grande guardado
-        bool * status;
+private:
+    /*Variables privadas*/
+    int w_len; ///< Tamaño de la ventana.
+    int frame_len; ///< Tamaño de los fragmentos en la ventana.
+    char ** ventana; ///< Ventana donde se guardan los fragmentos de archivo.
+    int nMin; ///< El número de paquete más pequeño guardado.
+    int item_counter; ///< Cantidad de elementos guardados.
+    int last_filled; ///< El número de paquete más grande guardado.
+    bool * status; ///< Estado (vacío/lleno) de cada una de las posisciones de la ventana.
 
-        /*
-        Método: copy_to_me
-        Parámetros:
-            index = la posición en el vector donde se copia
-            b = vector fuente
-            length = tamano de los datos a copiar
-        Ejecución:
-                Crea una copia en el punto index del vector con
-            tamaño length y empieza a copiar todos los puntos
-            del vector fuente
-        */
-        int copy_to_me(int index, type_ptr b, int length){
-            //vector[index]=new type[length];
-            for (int i = 0; i < length; i++) {
-                vector[index][i]=b[i];
-            }
-            return 1;
-        }
-    public:
-        /*
-        Constructor
-        Parámetros:
-            size = tamaño del vector
-            nMin = inicialización del paquete más pequeño
-        Ejecución:
-                Inicializa la cola con el tamaño size y lo limpia con ceros
-            en cada punto, inicializa el paquete más pequeño con el ingresado
-            en nMin y pone la cantidad de elementos en cero.
-        */
-        Window(int size, int w_len,int nMin){
-            last_filled=0;
-            this->size = size;
-            this->w_len = w_len;
-            status = new bool[size];
-            vector = new type_ptr[size];
-            for (int i = 0; i < size; i++) {
-                vector[i]= new char[w_len];
-                status[i] = false;
-            }
+    /*Métodos privados*/
+    /**
+     * @brief copy_to_me copia en el punto de la ventana señalada el fragmento ingresado.
+     * @param pivote posición de la ventana a ingresar el fragmento.
+     * @param source fragmento fuente a ser ingresado.
+     */
+    void copy_to_me(int pivote, char * source);
 
-            clean(this->vector,size,w_len);
+public:
+    /*Métodos públicos*/
 
-            this->nMin = nMin;
-            item_accounter = 0;
-        }
+    /**
+     * @brief Window constructor que inicializa todos los datos que se usan en la clase.
+     * @param w_len longitud de la ventana.
+     * @param frame_len tamaño máximo de los fragmentos a guardar.
+     */
+    Window(int w_len, int frame_len);
 
-        void clean(char ** v,int size,int w_len){
-            for(int i = 0; i<size; ++i){
-                for(int j = 0; j<w_len; ++j){
-                    v[i][j] = '\0';
+    /**
+     *  @brief ~Window destructor de la clase, borra las instancias hechas.
+     */
+    ~Window();
 
-                }
+    /**
+     * @brief put intenta insertar un fragmento en la ventana, solo si está en el rango.
+     * @param num_package especifíca el número de fragmento que desea ingresar.
+     * @param source es el fragmento a ser ingresado.
+     * @return 1 si logró insertar el fragmento
+     */
+    int put(int num_package, char * source);
 
-            }
-        }
+    /**
+     * @brief get_recv intenta obtener y sacar de la ventana el fragmento más pequeño existente.
+     * @param dest buffer donde se desea enviar el fragmento.
+     * @return
+     * 1 existe el fragmento y se logró sacar con éxito.
+     * 0 no existe el fragmento y no se logró sacar con éxito.
+     */
+    int get_recv(char * dest);
 
-        ~Window(){
-            for (int i = 0; i < size; i++) {
-                delete vector[i];
-            }
-            delete vector;
-        }
+    /**
+     * @brief copy_to_others copia lo que hay en el buffer source, dentro del buffer dest,
+     * todo esto con tamaño frame_len.
+     * @param dest buffer destino de la copia.
+     * @param source buffer fuente de la copia.
+     */
+    void copy_to_others(char * dest, char * source);
 
+    /**
+     * @brief check_status permite imprimir todas las variables esenciales de la ventana.
+     */
+    void check_status();
 
-        void printVec(char buffer[],int size){
-            printf("BUFF: ");
-            if(!buffer)
-                printf("NONE");
-            for(int i = 0; i < size; ++i){
-                printf("%c ",buffer[i]);
-            }
-            printf("\n");
-            //fflush(stdout);
-        }
-        /*
-        Método:
-            put
-        Parámetros:
-            num_package = indica el numero de paquete de la información
-                          entrante.
-            source = puntero a dirección de la información que se quiere
-                     ingresar a la cola.
-            length = tamaño de la cantidad de elementos apuntados por source
-        Ejecución:
-                Se fija que el numero de paquete entrante quepa en el rango
-            disponible en ese momento en la cola; si cupo, toma el punto
-            modular del paquete en el vector y se fija que no exista nada
-            en el punto (para no sobreescribir datos ya existentes); si no
-            existía nada en el vector llena el ultimo paquete lleno con
-            con el paquete actual, copia en el vector de la cola los datos
-            señalados por source y aumenta la cantidad de elementos en 1.
-        Retornos:
-            returna 0 -> el paquete no cupo en el rango del vector.
-            retorna !=0 -> se pudo ingresar el paquete o se comprobó su
-                           existencia en el vector.
-        */
-        int put(int num_package,type_ptr source,int length){
-            if (nMin <= num_package && ((nMin)+size) > num_package) {
-                int pivote = num_package%size;
-                if (!status[pivote]) {
-                    status[pivote]=true;
-                    last_filled=num_package;
-                    copy_to_me(pivote, source, length);
-                    item_accounter++;
-                }
-                return 1;
-            }
-            return 0;
-        }
-        /*
-        Método:
-            get_recv
-        Parámetros:
-            dest = puntero a variable destino donde se guardará lo extraído
-                   de la cola.
-            length = tamaño de la cantidad de elementos que se pueden copiar
-                     en dest.
-        Ejecución:
-                Calcula la posición modular del paquete más pequeño que se espera
-            obtener de la cola, comprueba que el paquete se encuentre en el
-            vector, si está, copia la información en el puntero destino, elimina
-            los datos recien extraídos de la cola y limpia la posición con un cero,
-            aumenta el paquete más pequeño esperado en 1, y decrementa la cantidad
-            de elementos en 1.
-        Retornos:
-            returna 0 -> el paquete no se encontraba en el vector.
-            retorna 1 -> se pudo extraer y realizar la operación con éxito.
-        */
-        int get_recv(type_ptr dest,int length){
-            int pivote = nMin%size;
-            if (status[pivote]) {
-                copy_to_others(dest,vector[pivote],length,0,0);
-                status[pivote] = false;
-                nMin ++;
-                item_accounter--;
-                return 1;
-            }
-            return 0;
-        }
-        /*
-        Método:
-            get_send
-        Parámetros:
-            dest = puntero a variable destino donde se guardará lo extraído
-                   de la cola.
-            num_package = número de paquete a extraer de la cola.
-            length = tamaño de la cantidad de elementos que se pueden copiar
-                     en dest.
-        Ejecución:
-                Calcula la posición modular del paquete que se desea extraer, comprueba
-            que existe algún dato en esa posición y que el numero de paquete esté
-            en el rango de la cola, copia en el puntero destino la información
-            de la cola en la posición calculada anteriormente.
-                Este método en contraste de get_recv no elimina el elemento extraído
-            de la cola.
-        Retornos:
-            returna 0 -> el paquete no se encontraba en la cola.
-            retorna 1 -> se pudo obtener y realizar la operación con éxito.
-        */
-        int get_send(type_ptr dest, int num_package, int length){
-            int pivote = num_package%size;
-            if (nMin <= num_package && ((nMin+size) > num_package) && status[pivote]) {
-                copy_to_others(dest,vector[pivote],length,0,0);
-                return 1;
-            }
-            return 0;
-        }
-        /*
-        Método:
-            get_nMin
-        Parámetros:
-        Ejecución:
-                Obtiene el valor del número de paquete más pequeño esperado en
-            la cola y lo retorna.
-        Retornos:
-            returna nMin -> valor del número de paquete más pequeño esperado en
-                            la cola.
-        */
-        int get_nMin(){
-            return nMin;
-        }
-        /*
-        Método:
-            get_size
-        Parámetros:
-        Ejecución:
-                Obtiene el tamaño de la cola y lo retorna.
-        Retornos:
-            returna size -> valor del tamaño de la cola.
-        */
-        int get_size(){
-            return size;
-        }
+    /**
+     * @brief print imprime todo el contenido activo en la ventana.
+     */
+    void print();
 
-        bool empty(){
-            if (item_accounter) {
-                return false;
-            }
-            return true;
-        };
-        /*
-        Método:
-            get_nMin
-        Parámetros:
-        Ejecución:
-                Obtiene el valor del número de paquete más grande ingresado en
-            la cola y lo retorna.
-        Retornos:
-            returna last_filled -> valor del número de paquete más grande
-                                   ingresado en la cola.
-        */
-        int get_last(){
-            return last_filled;
-        }
-        /*
-        Método:
-            set_nMin
-        Parámetros:
-            num_package = número de paquete que será puesto como el número de
-                          más pequeño esperado o ingresado en la por la cola.
-        Ejecución:
-                Cambia el número de paquete más pequeño esperado por la cola, y
-            la recorre limpiando los lugares y la memoria de todos los paquetes
-            que se encuentran en la cola que son menores al nuevo número de
-            paquete ingresado, luego actualiza el valor del número más pequeño
-            ingresado o esperado en la cola con el numero de paquete ingresado,
-            e actualiza el valor del ultimo paquete llenado con el de él valor
-            del numero de paquete más pequeño ingresado o esperado en la cola
-            menos uno.
-                Este método solo para cambiar hacia números de paquetes más grandes
-            que el número de paquete más pequeño ingreado en la cola.
-        Retornos:
-            returna n -> valor del número de paquete más grande
-                                   ingresado en la cola.
-        */
-        int set_nMin(int num_package){
-            int pivot = 0;
-            for (int i = nMin; i < (nMin+size); i++) {
-                pivot = i%size;
-                if (i < num_package && !esta_vacio(pivot)) {
-                    //delete vector[pivot];
-                    //vector[pivot] = 0;
-                    item_accounter--;
-                }
-            }
-            nMin = num_package;
-            last_filled = nMin-1;
-            return nMin;
-        }
+    /**
+     * @brief get_send obtiene el número de p
+     * @param dest
+     * @param num_package
+     * @return
+     */
+    int get_send(char * dest, int num_package);
 
-        //void set_nMin(int ack){
+    /**
+     * @brief get_nMin obtiene el valor del paquete más pequeño en la ventana y lo retorna.
+     * @return paquete más pequeño en la ventana (nMin).
+     */
+    int get_nMin();
 
-        //}
-        void set_RNmin(int val){
-          nMin = val;
-        }
-        /*
-        Método:
-            print
-        Parámetros:
-        Ejecución:
-                Imprime todo lo que hay en la cola.
-        Retornos:
-        */
-        int esta_vacio(int pos){
-            for(int i = 0; i < w_len; i++){
-              if(vector[pos][i] != '\0'){
-                  return 0;
-              }
-            }
-            return 1;
-        }
-        void print(){
-            for (int i = 0; i < size; i++) {
-                for(int j = 0; j < w_len ; j++){
-                    if (!esta_vacio(i)) {
-                        cout << i << " hay datos";
-                        break;
-                    } else {
-                        cout << i << " esta_vacio";
-                        break;
-                    }
-                }
-                 cout << endl;
-            }
-            cout << "RNmin: " << nMin << endl;
-            //fflush(stdout);
-            return;
-        }
-        /*
-        Método:
-            check_status
-        Parámetros:
-        Ejecución:
-                Imprime el valor que hay en cada una de las variables.
-        Retornos:
-        */
-        void check_status(){
-            cout << "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-" << endl;
-            printf(" Size:%d\n Item accounter:%d\n nMin:%d\n Last filled:%d\n",
-            size, item_accounter, nMin, last_filled);
-            cout << "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-" << endl;
-            return;
-        }
-        /*
-        Método:
-            copy_to_others
-        Parámetros:
-            dest = puntero de variable donde se copiarán los datos.
-            source = puntero de variable de donde se tomarán los datos a copiar.
-            length = tope de cantidad de datos disponibles para copiar.
-            dest_index = punto de inicio de la varible destino para copiar los datos.
-            source_index = punto de inicio de la varible fuente para copiar los datos.
+    /**
+     * @brief get_W_len obtiene el tamaño de la ventana y lo retorna.
+     * @return tamaño de la ventana.
+     */
+    int get_W_len();
 
-        Ejecución:
-                Recorre desde la posición del indice hasta el tope, copiando el
-                valor del punto fuente hacia el de destino.
-        Retornos:
-        */
-        void copy_to_others(type_ptr dest, type_ptr source, int length, int dest_index, int source_index){
-            while (dest_index<length && source_index<length) {
-                dest[dest_index]=source[source_index];
-                dest_index++;
-                source_index++;
-            }
-            return;
-        }
+    /**
+     * @brief empty verifica si existe algún elemento en la ventana.
+     * @return
+     * true si la ventana está vacía.
+     * false si la ventana no está vacía.
+     */
+    bool empty();
+
+    /**
+     * @brief get_last obtiene el último paquete que se ingresó en la ventana.
+     * @return el último paquete ingresado.
+     */
+    int get_last();
+
+    /**
+     * @brief get_frame_len obtiene el tamaño asignado para cada fragmento.
+     * @return Tamaño asignado para cada fragmento.
+     */
+    int get_frame_len();
+
+    /**
+     * @brief set_nMin cambia el valor el paquete más pequeño ingresado, y con ello el rango
+     * de la ventana.
+     * @param num_package el número de paquete, con el cual se desea cambiar nMin.
+     */
+    void set_nMin(int num_package);
 };
 
-#endif // COLA_H
+#endif // WINDOW_H

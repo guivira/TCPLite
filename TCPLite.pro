@@ -18,7 +18,8 @@ SOURCES += \
         data.cpp \
         high_layer.cpp \
         main.cpp \
-        send_data.cpp
+        send_data.cpp \
+        window.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

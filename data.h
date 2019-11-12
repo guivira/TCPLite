@@ -6,8 +6,12 @@
 #include "window.h"
 
 class Data{
-private:
+public:
+    /*VARIABLES PÚBLICAS*/
     char ip[15];
+    char nama_file[40];
+    char * dat;
+    int f_len;
     int puerto;
     FILE * fd;
     bool int_in_use = true;
@@ -15,7 +19,8 @@ private:
     sem_t hl_semaphore;
     sem_t int_semaphore;
     Window * wndw;
-public:
+
+    /*MÉTODOS PÚBLICOS*/
     Data(char * name_file, char * ip, int puerto, int frame_len, int w_len);
     ~Data();
 };

@@ -2,8 +2,7 @@
 #define SEND_DATA_H
 
 
-class Send_data
-{
+class Send_data{
 public:
     Send_data();
 };
